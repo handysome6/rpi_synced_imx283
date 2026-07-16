@@ -4,7 +4,7 @@
 
 This document records the IMX283 camera bring-up work performed on a Raspberry Pi Compute Module 4 IO Board and a Raspberry Pi 5 Model B. It includes the working boot configuration, test commands, observed failures, troubleshooting steps, and the final dual-camera result.
 
-The final Raspberry Pi 5 test proved that both IMX283 modules can be detected, streamed independently, and captured concurrently. It did not measure frame-level synchronization accuracy.
+The Raspberry Pi 5 bring-up proved that both IMX283 modules can be detected, streamed independently, and captured concurrently. Subsequent software-sync tests measured frame timestamp alignment and are documented in [software-sync-validation.md](software-sync-validation.md).
 
 ## Tested Hardware and Software
 
@@ -328,13 +328,16 @@ As of 2026-07-16:
 - Camera 1 captures successfully.
 - Both cameras capture concurrently at 1824 x 1216.
 - The final working setup uses default IMX283 clock and CSI link frequencies.
-- Precise frame synchronization has not yet been characterized.
+- The active PiSP IMX283 tuning file requires an `rpi.sync` algorithm entry on the tested image.
+- Both cameras reach `SyncReady=True` after that tuning entry is enabled.
+- Triggered JPEG pairs were validated at 2736 x 1824 and 5472 x 3648.
+- Measured sensor timestamp alignment was in the tens of microseconds during the completed tests.
 
-## Recommended Next Tests for Synchronization Work
+## Remaining Tests for Production Use
 
-1. Record the metadata and sensor timestamps for both streams over a sustained run.
-2. Measure timestamp offset and jitter rather than relying on process launch time.
-3. Verify whether the camera modules expose a common trigger, XVS, or synchronization signal.
-4. If hardware triggering is available, wire both modules to a shared trigger and confirm the driver exposes the required controls.
-5. Test concurrent full-resolution capture and sustained video for dropped frames, thermal behavior, and bandwidth limits.
-6. Add a repeatable capture script that records configuration, timestamps, dropped frames, and kernel errors for each run.
+1. Run a long triggered-capture soak test and measure worst-case and percentile timestamp error.
+2. Test repeated full-resolution capture for dropped frames, thermal behavior, and bandwidth limits.
+3. Validate alignment with a moving visual target or timestamped light source.
+4. Verify whether the camera modules expose a common trigger, XVS, or synchronization signal.
+5. If hardware triggering is available, wire both modules to a shared trigger and confirm the driver exposes the required controls.
+6. Add a GPIO input adapter if the production trigger is a physical signal.
