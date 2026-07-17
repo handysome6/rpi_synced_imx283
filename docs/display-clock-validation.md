@@ -63,6 +63,51 @@ The external clock images sometimes showed the same millisecond value and someti
 
 This visible difference does not agree with the tens-of-microseconds sensor timestamps and must not be interpreted directly as camera frame-start error.
 
+## Post-Alignment Repeat
+
+The test was repeated on 2026-07-18 after replacing a faulty FPC cable, rebooting the Raspberry Pi, and mounting both camera modules with matching image orientation. The counter was also placed at approximately the same sensor-row coordinate in both unrotated images.
+
+Both cameras enumerated correctly and completed independent JPEG captures before the synchronized run. The previous I2C `-121` error did not recur.
+
+The repeat used these settings:
+
+- Resolution: 2736 x 1824
+- Frame rate: 5 fps
+- Requested exposure: 200 us
+- Actual exposure: 194 us on both cameras
+- Analogue gain: 16.0 on both cameras
+- Captured pairs: 12
+
+All 12 pairs showed the same visible counter state in the server and client images:
+
+| Pair | Server display | Client display | Timestamp delta, client minus server |
+| ---: | ---: | ---: | ---: |
+| 1 | 33.807 | 33.807 | -33 us |
+| 2 | 34.407 | 34.407 | -32 us |
+| 3 | 35.007 | 35.007 | -32 us |
+| 4 | 35.599 | 35.599 | -32 us |
+| 5 | 36.199 | 36.199 | -33 us |
+| 6 | 36.799 | 36.799 | -31 us |
+| 7 | 37.398 | 37.398 | -31 us |
+| 8 | 37.999 | 37.999 | -32 us |
+| 9 | 38.607 | 38.607 | -30 us |
+| 10 | 39.207 | 39.207 | -32 us |
+| 11 | 39.807 | 39.807 | -31 us |
+| 12 | 40.407 | 40.407 | -31 us |
+
+The pair-12 display transition contained some visible refresh ghosting, but both cameras recorded the same transition state.
+
+![Twelve synchronized IMX283 display-clock pairs](assets/clock-200us-rotated-contact-sheet.jpg)
+
+The metadata statistics for this run were:
+
+- Range: -33 to -30 us
+- Mean absolute delta: 31.667 us
+- 95th-percentile absolute delta: 33 us
+- Maximum absolute delta: 33 us
+
+This is the strongest result from the display-clock tests. Matching camera orientation and sensor-row placement removed the previously observed one- or two-refresh visible offset. This strongly supports the explanation that the earlier 8 to 16 ms discrepancy came from rolling-shutter geometry and display scanout rather than from a comparable camera frame-start error. The metadata distribution was also tighter in this run, although a single test cannot establish that physical rotation caused the metadata improvement.
+
 ## Why the Display Is a Coarse Instrument
 
 A 120 Hz display presents only 120 new visual states per second. Even if the counter text contains three decimal digits, the physical panel cannot present an independently measurable state every millisecond. Its fundamental state interval is approximately 8.33 ms.
@@ -84,4 +129,4 @@ For a stronger repeat:
 5. Classify visible values by 120 Hz display state rather than treating the printed millisecond digits as 1 ms ground truth.
 6. Use an externally driven LED or LED timecode source for sub-millisecond visual validation.
 
-For the current setup, the reliable quantitative synchronization result remains the sensor metadata: frame-start alignment in the tens of microseconds.
+For the current setup, the visible result shows that all 12 tested pairs captured the same 120 Hz display state, at a coarse 8.33 ms state interval. The reliable finer-grained quantitative result remains the sensor metadata: a maximum absolute frame-start delta of 33 us in the post-alignment run.

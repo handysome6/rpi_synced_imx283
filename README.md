@@ -2,7 +2,7 @@
 
 This project captures JPEG pairs from two IMX283 cameras on one Raspberry Pi 5. It uses the Raspberry Pi `libcamera` software synchronization algorithm, keeps both cameras streaming, and saves a matched pair when the process receives a trigger.
 
-The tested setup reached `SyncReady=True` and produced frame timestamp offsets in the tens of microseconds. See [docs/software-sync-validation.md](docs/software-sync-validation.md) for the measurements and limitations.
+The tested setup reached `SyncReady=True` and produced frame timestamp offsets in the tens of microseconds. In the final 120 Hz display-clock test, all 12 captured pairs showed the same visible counter state, while the metadata offset remained between -33 and -30 us. See [docs/software-sync-validation.md](docs/software-sync-validation.md) and [docs/display-clock-validation.md](docs/display-clock-validation.md) for the measurements and limitations.
 
 ## Project Layout
 
@@ -207,6 +207,13 @@ python3 tools/exposure_sweep_capture.py \
 ```
 
 The tool flushes buffered frames after every control change and waits until both metadata streams confirm the requested exposure before saving a pair. On the tested scene, the sensor quantized requested exposures of 100, 200, and 400 us to 93, 194, and 396 us. A requested 200 us at analogue gain 16 was the shortest practical setting; 100 us was visible but dim and susceptible to display-refresh artifacts.
+
+After replacing a faulty FPC cable and mounting both cameras with matching orientation and target row placement, a 12-pair repeat at the 200 us setting produced:
+
+- 12 of 12 pairs showing the same visible counter state
+- actual exposure of 194 us and analogue gain of 16.0 on both cameras
+- client-minus-server timestamp deltas from -33 to -30 us
+- mean absolute delta of 31.667 us and maximum absolute delta of 33 us
 
 A 120 Hz display changes state only every 8.33 ms. It can provide a coarse frame-state check, but it cannot measure tens-of-microseconds camera alignment. Rolling-shutter row timing, display scanout, camera orientation, and the target's row position can make two synchronized cameras show adjacent display states. See [docs/display-clock-validation.md](docs/display-clock-validation.md) before interpreting visible millisecond differences.
 
